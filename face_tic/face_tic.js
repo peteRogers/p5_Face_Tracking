@@ -6,12 +6,20 @@
 const VIDEO_W = 640;
 const VIDEO_H = 480;
 
+let faceMesh;
 let video;
 let faces = [];   // the faces ml5 found in the latest video frame
 let faceX;        // where the face is on the screen
 let tic;
 
-function setup() {
+// flipped mirrors the face points, so moving left moves the line left
+let options = { maxFaces: 1, flipped: true };
+
+async function setup() {
+  // ml5.faceMesh() returns right away, so wait for the model to finish loading
+  faceMesh = ml5.faceMesh(options);
+  await faceMesh.ready;
+
   createCanvas(VIDEO_W, VIDEO_H);
   faceX = width / 2;
 
@@ -19,10 +27,8 @@ function setup() {
   video.size(VIDEO_W, VIDEO_H);
   video.hide();
 
-  // flipped mirrors the face points, so moving left moves the line left
-  let faceMesh = ml5.faceMesh({ maxFaces: 1, flipped: true }, () => {
-    faceMesh.detectStart(video, (results) => faces = results);
-  });
+  // Start detecting faces from the webcam video
+  faceMesh.detectStart(video, gotFaces);
 
   // position mode: the motor turns to an angle between its min and max
   // the panels below the canvas set the angles, speed and current
@@ -58,18 +64,14 @@ function draw() {
   stroke(0, 200, 255);
   line(faceX, 0, faceX, height);
 
-  // draw every facial landmark as a point
-  if (found) {
-    stroke(0, 255, 120);
-    strokeWeight(3);
-    for (let p of faces[0].keypoints) {
-      point(p.x, p.y);
-    }
-    strokeWeight(1);
-  }
-
   noStroke();
   fill(255);
   textSize(16);
   text("x " + nf(x, 1, 2) + "   (" + tic.motors.length + " tic, " + faces.length + " face)", 20, 30);
+}
+
+// Callback function for when faceMesh outputs data
+function gotFaces(results) {
+  // Save the output to the faces variable
+  faces = results;
 }
