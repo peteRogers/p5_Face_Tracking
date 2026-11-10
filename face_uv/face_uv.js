@@ -20,27 +20,29 @@ async function setup() {
   // ml5.faceMesh() returns right away, so wait for the model to finish loading
   faceMesh = ml5.faceMesh(options);
   await faceMesh.ready;
-  uvMapImage = await loadImage("mesh_map.jpg");
+  uvMapImage = await loadImage("mesh_map.png");
 
   createCanvas(windowWidth, windowHeight, WEBGL);
 
   // Create the webcam video and hide it
-  video = createCapture(VIDEO);
+  video = createCapture(VIDEO, { flipped: true });
   video.hide();
   // Start detecting faces from the webcam video
   faceMesh.detectStart(video, gotFaces);
   // Get the Coordinates for the uv mapping
   triangulation = faceMesh.getTriangles();
   uvCoords = faceMesh.getUVCoords();
+  background(255,255,0)
 }
 
 function draw() {
-  background(51);
-
+  //background(51);
+  
   // Scale the webcam view to fit the canvas, keeping its proportions
   // WEBGL puts (0, 0) in the middle, so this centres the view too
   scale(min(width / video.width, height / video.height));
   translate(-video.width / 2, -video.height / 2);
+  //image(video, 0, 0)
 
   for (let i = 0; i < faces.length; i++) {
     let face = faces[i]; 
@@ -59,6 +61,7 @@ function draw() {
     }
     // Draw all the triangles
     noStroke();
+    tint(255, 20)
     texture(uvMapImage);
     textureMode(NORMAL);
     beginShape(TRIANGLES);
